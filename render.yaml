@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: aethercode-tarot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: streamlit run model/tarot_app_10.py
+    autoDeploy: true
