@@ -238,7 +238,7 @@ elif draw_mode == "使用线上抽牌":
             # 获取英文文件名
                 eng_filename = tarot_name_map.get(card, None)
                 if eng_filename:
-                    image_path = f"D:/Project/taro/images/{eng_filename}.jpg"
+                    image_path = f"images/{eng_filename}.jpg"
 
                     # 检查图片是否存在
                     if os.path.exists(image_path):
