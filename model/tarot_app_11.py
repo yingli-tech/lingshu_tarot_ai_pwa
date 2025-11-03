@@ -4,7 +4,19 @@ from datetime import datetime
 import streamlit as st
 from openai import OpenAI
 
+ga_id = os.getenv("GA_MEASUREMENT_ID")
 
+if ga_id:
+    st.markdown(f"""
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={ga_id}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+      gtag('config', '{ga_id}');
+    </script>
+    """, unsafe_allow_html=True)
 
 st.markdown(
     """
@@ -21,19 +33,7 @@ st.markdown(
 )
 
 
-ga_id = os.getenv("GA_MEASUREMENT_ID")
 
-if ga_id:
-    st.markdown(f"""
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={ga_id}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-      gtag('config', '{ga_id}');
-    </script>
-    """, unsafe_allow_html=True)
 
 
 # --------------------
