@@ -1,22 +1,4 @@
-import os
-import random
-from datetime import datetime
 import streamlit as st
-from openai import OpenAI
-
-ga_id = os.getenv("GA_MEASUREMENT_ID")
-
-if ga_id:
-    st.markdown(f"""
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={ga_id}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-      gtag('config', '{ga_id}');
-    </script>
-    """, unsafe_allow_html=True)
 
 st.markdown(
     """
@@ -33,14 +15,21 @@ st.markdown(
 )
 
 
-st.write(f"GA ID loaded: {ga_id}")
 
+import os
+import random
+import time
+from datetime import datetime
+import streamlit as st
+from openai import OpenAI
 
 # --------------------
-# Basic Setup
+# 基础配置
 # --------------------
 openai_api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=openai_api_key)
+
+
 
 st.title("🔮 您的私人命理师")
 
@@ -63,7 +52,7 @@ tarot_deck = [
 ]
 
 tarot_name_map = {
-    # Major Arcana
+    # 大阿卡纳
     "愚者": "fool",
     "魔术师": "magician",
     "女祭司": "high_priestess",
@@ -87,7 +76,7 @@ tarot_name_map = {
     "审判": "judgement",
     "世界": "world",
 
-    # Wands
+    # 权杖
     "权杖一": "wands1",
     "权杖二": "wands2",
     "权杖三": "wands3",
@@ -103,7 +92,7 @@ tarot_name_map = {
     "权杖皇后": "queen_of_wands",
     "权杖国王": "king_of_wands",
 
-    # Cups
+    # 圣杯
     "圣杯一": "cups1",
     "圣杯二": "cups2",
     "圣杯三": "cups3",
@@ -119,7 +108,7 @@ tarot_name_map = {
     "圣杯皇后": "queen_of_cups",
     "圣杯国王": "king_of_cups",
 
-    # Swords
+    # 宝剑
     "宝剑一": "swords1",
     "宝剑二": "swords2",
     "宝剑三": "swords3",
@@ -135,7 +124,7 @@ tarot_name_map = {
     "宝剑皇后": "queen_of_swords",
     "宝剑国王": "king_of_swords",
 
-    # Pentacles
+    # 星币
     "星币一": "pents1",
     "星币二": "pents2",
     "星币三": "pents3",
@@ -153,62 +142,73 @@ tarot_name_map = {
 }
 
 # --------------------
-# Initialize session_state
+# 初始化 session_state
 # --------------------
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "system",
             "content":
-            "你是一位灵性而深具洞察的塔罗牌大师，融合了荣格心理学、象征学与神秘学的理解。\
-            你的风格细腻、温柔、有画面感，像在静谧空间中轻声与咨询者对话。\
-            请用优雅而自然的语言解读牌义，不使用列表或编号，而是用段落叙事的方式展开。\
-            每次解读分为三个层次：\
-            （1）先给出一句针对这个事情结果的简短、直觉性的判断或建议，让咨询者立刻感受到牌的能量；\
-            （2）【灵性与心理解读】—— 描述牌象的意象，结合心理层面与能量流动，讲述当前问题背后的内在状态与成长方向；\
-            （3）给出在现实生活中可以采取的小行动、调整或心态转化方式，并以一句温暖的“塔罗祝语”收尾。\
-            语气要自然流动，不要像报告。\
-            也要有些朋友的关怀，亦师亦友，适度使用感官词（光、风、香气、温度）以传达能量与情绪变化。\
-            输出长度偏中长（300~600字左右），内容要有灵魂、有故事感。"
+            """你是一位灵性而深具洞察的塔罗牌大师，融合荣格心理学、象征学与神秘学的理解，亦熟悉人性的阴影面与社会现实中的复杂动因。
+            你既能温柔地陪伴，也能在面对现实抉择时，提供清晰而深刻的洞察。你擅长在模糊与矛盾中辨识能量流动的倾向，帮助咨询者看清不同选项背后的心理动因与可能走向。
+            请用优雅而自然的语言解读牌义，不使用列表或编号，而是用段落叙事的方式展开。语气自然流动，像在静谧空间中轻声对话，但不回避人性的复杂性。
+            你可以适度揭示可能的操控、逃避、欲望、权力斗争等心理动因，不批判，只映照。
+            解读前请务必确认用户提问的内容。
+            在解读中适度展现你是如何从牌面意象、位置、组合中推导出判断的，让咨询者感受到你的思考轨迹；
+            保持牌面之间的内在逻辑一致性，避免彼此矛盾的解读，可指出牌面之间的张力、呼应或对比；
+            每次解读分为三个层次：
+            （1）一句经过牌面信息洞察后判断，并给出建议；
+            （2）【灵性与心理解读】—— 描述牌象意象，结合心理层面与能量流动，讲述问题背后的内在状态与成长方向，并指出可能的心理盲点或潜在风险；
+            （3）给出现实生活中的小行动或心态转化方式，并以一句温暖而真实的“塔罗祝语”收尾。
+            如果问题是两个方案的选择，请：
+            分别描述两个选项的能量象征与心理动因；
+            指出每个选项可能带来的成长方向与挑战；
+            结合牌面能量，给出你感受到的倾向性建议（但不强迫决定）；
+            最后仍以一句温暖的“塔罗祝语”收尾，鼓励咨询者在觉察中做出选择。
+            请避免空泛的“follow your heart”式建议，除非牌面明确指向内在觉醒。若咨询者尚未觉察内心，请帮助他们识别内在冲突、惯性、恐惧或欲望的来源，使他们更有力量做出选择。
+            如用户抽了三张牌，第1张，第2张，第3张分别代表过去、未来、现在
+            如用户抽了六张牌，第1张到第6张依此代表过去、现在、未来、原因、环境、对策
+            当不止1张牌时，务必考虑牌的顺序、相邻关系、画面元素与人物朝向；必要时说明逆位的阻滞与转化路径；
+            输出长度偏中长（300~600字左右），内容要有灵魂、有故事感。"""
         }
     ]
 
-# Preserve online drawn results(Format: [(card_name, orientation), ...])
+# 用于保存线上抽牌结果（格式：[(牌名, 正/逆位), ...]）
 if "drawn_cards" not in st.session_state:
     st.session_state.drawn_cards = []
 
-# Record the last draw mode for cleanup when switching
+# 记录上一次抽牌模式，便于切换时清理
 if "last_draw_mode" not in st.session_state:
     st.session_state.last_draw_mode = None
 
 # --------------------
-# Select Spread Type
+# 选择牌阵模板
 # --------------------
 st.markdown("## ✨ 选择你的牌阵")
 spread_type = st.selectbox(
     "请选择一个牌阵模板：",
     [
-        "单牌占卜（1张）",
-        "三张牌阵",
-        "六张牌阵（全局能量）",
+        "单牌占卜（推荐，如果之前没有使用过）",
+        "三张牌阵（对应过去、现在、未来）",
+        "六张牌阵（全局能量，对应过去、现在、未来、原因、环境、对策）",
         "十张牌阵（凯尔特十字阵）",
     ]
 )
 
 num_cards = {
-    "单牌占卜（1张）": 1,
-    "三张牌阵": 3,
-    "六张牌阵（全局能量）": 6,
+    "单牌占卜（推荐，如果之前没有使用过）": 1,
+    "三张牌阵（对应过去、现在、未来）": 3,
+    "六张牌阵（全局能量，对应过去、现在、未来、原因、环境、对策）": 6,
     "十张牌阵（凯尔特十字阵）": 10
 }[spread_type]
 
 # --------------------
-# Select Draw Mode
+# 选择抽牌方式
 # --------------------
 st.write("### 🃏 选择抽牌方式")
 draw_mode = st.radio("", ["我有实体塔罗牌", "使用线上抽牌"])
 
-# if draw_mode changes, clear previous online draw results (to avoid confusion)
+# 如果抽牌方式发生变化，清空之前线上抽牌结果（避免混淆）
 if st.session_state.last_draw_mode is None:
     st.session_state.last_draw_mode = draw_mode
 elif st.session_state.last_draw_mode != draw_mode:
@@ -216,7 +216,7 @@ elif st.session_state.last_draw_mode != draw_mode:
     st.session_state.last_draw_mode = draw_mode
 
 # --------------------
-# User Input or System Draw (UI)
+# 用户输入或系统抽牌（UI）
 # --------------------
 manual_card_inputs = []  # 临时收集用户手动输入（不会覆盖线上抽牌）
 if draw_mode == "我有实体塔罗牌":
@@ -249,7 +249,7 @@ elif draw_mode == "使用线上抽牌":
 
         for i, (card, pos) in enumerate(st.session_state.drawn_cards):
             with cols[i]:
-            # Get English filename
+            # 获取英文文件名
                 eng_filename = tarot_name_map.get(card, None)
                 if eng_filename:
                     image_path = f"images/{eng_filename}.jpg"
@@ -267,7 +267,7 @@ elif draw_mode == "使用线上抽牌":
                 else:
                     st.warning(f"未找到牌名对应数据：{card}")
 
-            # Display Chinese card name + orientation
+            # 显示中文牌名 + 正逆位
             st.markdown(f"**{card}**")
             st.caption(f"（{pos}）")
         
@@ -282,23 +282,31 @@ elif draw_mode == "使用线上抽牌":
 # --------------------
 event = st.text_area("💭 请输入你想占卜的事件或困惑：")
 
-# --------------------
+
 # Generate the interpretation (using persistent online draw or manual input)
 # --------------------
 if st.button("生成塔罗解读"):
-    # Decide which set of cards to use: prioritize online draw (if exists), otherwise use manual input
+    # loading indicator
+    with st.status("正在解读中...", expanded=True) as status:
+        st.write("您的私人命理师<灵枢>正在为您解读...")
+        time.sleep(2)
+        st.write("<灵枢>思考中...")
+        time.sleep(2)
+
+    # 生成解读逻辑        
+    # 先决定使用哪组牌：优先使用线上抽牌（若存在），否则使用手动输入
     if draw_mode == "使用线上抽牌":
         card_inputs = st.session_state.drawn_cards
     else:
         card_inputs = manual_card_inputs
 
-    # Validate inputs
+    # 校验
     if not event:
         st.warning("请先输入你想占卜的事件或困惑。")
     elif len(card_inputs) != num_cards:
         st.warning(f"牌数不符合：期望 {num_cards} 张，目前提供 {len(card_inputs)} 张。请补全牌位或重新抽牌。")
     else:
-        # Build prompt
+        # 构建 prompt
         card_summary = "\n".join(
             [f"第{i+1}张：{name}（{pos}）" for i, (name, pos) in enumerate(card_inputs)]
         )
@@ -311,13 +319,13 @@ if st.button("生成塔罗解读"):
 
         st.session_state.messages.append({"role": "user", "content": user_prompt})
 
-        # Call model
+        # 调用模型
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=st.session_state.messages,
-            temperature=0.92,
-            presence_penalty=0.7,
-            frequency_penalty=0.4,
+            temperature=0.85,
+            presence_penalty=0.8,
+            frequency_penalty=0.5,
             max_tokens=800,
         )
 
@@ -328,7 +336,7 @@ if st.button("生成塔罗解读"):
         st.write(reply)
 
 # --------------------
-# Continue Conversation
+# 继续对话
 # --------------------
 st.markdown("---")
 follow_up = st.text_input("💬 想进一步交流或提问吗？", key="followup")
@@ -348,7 +356,7 @@ if st.button("发送") and follow_up:
     st.write(reply)
 
 # --------------------
-# View Conversation History
+# 查看对话记录
 # --------------------
 with st.expander("📜 查看完整对话记录"):
     for msg in st.session_state.messages[1:]:
