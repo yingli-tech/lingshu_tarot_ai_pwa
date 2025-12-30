@@ -229,7 +229,7 @@ num_cards = {
 # 选择抽牌方式
 # --------------------
 st.write("### 🌱 选择抽牌方式")
-draw_mode = st.radio("", ["使用线上抽牌","已有实体塔罗牌，手动输入牌名称" ])
+draw_mode = st.radio("", ["使用线上抽牌","已有实体塔罗牌，手动输入牌卡名称" ])
 
 # 如果抽牌方式发生变化，清空之前线上抽牌结果（避免混淆）
 if st.session_state.last_draw_mode is None:
@@ -243,7 +243,7 @@ elif st.session_state.last_draw_mode != draw_mode:
 # --------------------
 manual_card_inputs = []  # 临时收集用户手动输入（不会覆盖线上抽牌）
 if draw_mode == "使用线上抽牌":
-    st.info("请在心中默念您的问题，然后点击下方按钮。")
+    st.info("请在心中默念您的问题，然后点击下方抽牌按钮。")
     if st.button("🌌 抽牌"):
         random.seed(datetime.now().microsecond)
         selected = random.sample(tarot_deck, num_cards)
@@ -289,7 +289,7 @@ if draw_mode == "使用线上抽牌":
             st.markdown(f"**第{i}张：{card}（{pos}）**")
         st.caption("这些牌将用于生成塔罗解读。")
 
-elif draw_mode == "已有实体塔罗牌，手动输入牌名称":
+elif draw_mode == "已有实体塔罗牌，手动输入牌卡名称":
     st.info("请输入您抽到的每张牌与正/逆位：")
     for i in range(num_cards):
         col1, col2 = st.columns([2, 1])
@@ -304,10 +304,10 @@ elif draw_mode == "已有实体塔罗牌，手动输入牌名称":
 # --------------------
 
 event = st.text_area("💭 请输入您想占卜的问题：（系统不会记录具体内容）")
-st.write("每当您问一个问题时，也可以温柔地问问自己：我为什么想问它呢？")
+st.write("每当您问一个问题时，也可以温和地问问自己：我为什么想问它呢？")
 st.markdown("### 选择解读模式")
 mode = st.radio(
-    "请选择塔罗解读模式：",
+    "",
     ("指引型", "决策型")
 )
 
