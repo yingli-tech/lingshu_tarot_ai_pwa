@@ -271,9 +271,9 @@ if draw_mode == "使用线上抽牌":
                         from PIL import Image
                         if pos == "逆位":
                             img = Image.open(image_path).rotate(180)
-                            st.image(img, use_container_width=True)
+                            st.image(img, use_column_width=True)
                         else:
-                            st.image(image_path, use_container_width=True)
+                            st.image(image_path, use_column_width=True)
                     else:
                         st.warning(f"未找到牌图：{eng_filename}.jpg")
                 else:
